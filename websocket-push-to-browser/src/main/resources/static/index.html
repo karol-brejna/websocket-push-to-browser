@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket push update</title>
+        <script src="//cdn.jsdelivr.net/sockjs/1.0.0/sockjs.min.js"></script>
+        <script src="js/stomp.js"></script>
+        <script type="text/javascript">
+            var stompClient = null;
+            
+            function setConnected(connected) {
+                document.getElementById('message-box').innerHTML = '';
+            }
+            
+            function connect() {
+                var socket = new SockJS('/events');
+                // or var socket = new WebSocket('/events'); for configuration without SockJS
+                stompClient = Stomp.over(socket);
+                stompClient.connect({}, function(frame) {
+                    setConnected(true);
+                    console.log('Connected: ' + frame);
+                    stompClient.subscribe('/topic/updates', function(update){
+                        showUpdate(JSON.parse(update.body).content);
+                    });
+                });
+            }
+            
+            function disconnect() {
+                if (stompClient != null) {
+                    stompClient.disconnect();
+                }
+                setConnected(false);
+                console.log("Disconnected");
+            }
+
+            function showUpdate(message) {
+                var response = document.getElementById('message-box');
+                var p = document.createElement('p');
+                p.style.wordWrap = 'break-word';
+                p.appendChild(document.createTextNode(message));
+                response.appendChild(p);
+            }
+        </script>
+    </head>
+    <body onload="connect()">
+        <div>
+            <div id="message-box"></div>
+        </div>
+    </body>
+</html>
